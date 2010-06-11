@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Net::MQ;
+
+my $mq = new Net::MQ type => 'ZeroMQ';

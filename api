@@ -1,0 +1,37 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Net::MQ;
+
+my $mq = new Net::MQ type => 'zeromq';
+
+$mq->remote->host('127.0.0.1');
+$mq->remote->port(5555);
+$mq->remote->proto('tcp');
+
+$mq->connect;
+
+$mq->subscribe('orders');
+
+$mq->poll;
+
+$mq->post('jflkdslfkds');
+
+$mq->post(orders => 'jfkldjslfds', via => 'fanout');
+
+$mq->post(msg => 'jfklds', to => 'orders', via => 'fanout');
+
+
+# role-based stuff
+
+package MyApp::Artist;
+
+with 'Net::MQ::Publisher';
+
+has routes =>
+	isa	=> 'Path::Router',
+	is	=> 'ro',
+	default	=> 
+
