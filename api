@@ -24,7 +24,10 @@ $mq->post(orders => 'jfkldjslfds', via => 'fanout');
 $mq->post(msg => 'jfklds', to => 'orders', via => 'fanout');
 
 
-# role-based stuff
+# concept: role-based stuff
+# version: original thought
+# reason: just want event publisher functionality to be mixed into class
+# date: unknown
 
 package MyApp::Artist;
 
@@ -35,3 +38,53 @@ has routes =>
 	is	=> 'ro',
 	default	=> 
 
+# concept: role-based stuff
+# version: 2
+# reason:  routes seems to be too much, thinking more meta
+# date:    2010-10-06
+
+package MyApp::Artist;
+
+with 'Net::MQ::Publisher' => (router => 'default' _net_mq_namespace => 'MyApp::Event');
+
+method some_method_that_will_raise_an_event
+{
+	$self->mq->publish(event => { arg1 => 1, arg2 => 2 });
+	$self->mq->raise(event => { arg1 => 1, arg2 => 2 });
+	$self->mq->emit(event => { arg1 => 1, arg2 => 2 });
+}
+
+MyApp::Artist::Message::event
+
+# concept: store-and-forward workflow
+# version: original thought
+# reason:  nobody should configure disparate routes for individual objects
+# date:    2010-10-06
+
+{
+	package MyApp::Event::Artist::NewAlbum;
+
+	with 'Net::MQ::Message';
+
+	__PACKAGE__->transport(AMQP => { host => MyApp::Config->fetch('amqp') });
+
+	has album	=> (isa => 'MyApp::Album');
+	has name	=> (isa => 'Str');
+
+	# provides acknowledge, ack, and defer methods
+}
+
+{
+	package MyApp::Album;
+
+	with 'Net::MQ::Publisher' => (_mq_namespace => 'MyApp::EventRouter');
+
+	method purchase
+	{
+		$self->emit('purchased');
+	}
+}
+
+with 'Net::MQ::Subscriber';
+
+$self->mq->poll

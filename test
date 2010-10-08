@@ -1,8 +1,25 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
-use strict;
-use warnings;
+use MooseX::Declare;
 
-use Net::MQ;
+class MyApp::Album {
+	with 'Net::MQ::Publisher';# => (_mq_namespace => 'MyApp::Event');
 
-my $mq = new Net::MQ type => 'ZeroMQ';
+	__PACKAGE__->_mq_namespace('MyApp::Event');
+	__PACKAGE__->_mq_subject('Album');
+
+	method purchase {
+		$self->emit('purchased');
+	}
+}
+
+class MyApp::Event::Album::Purchased {
+	with 'Net::MQ::Message';
+
+	__PACKAGE__->transport([ AMQP => { host => 'localhost' } ]);
+
+	has album	=> (is => 'ro', isa => 'MyApp::Album');
+	has name	=> (is => 'ro', isa => 'Str');
+}
+
+MyApp::Album->new->purchase;
