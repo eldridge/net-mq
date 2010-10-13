@@ -20,6 +20,11 @@ sub emit
 {
 	my $self = shift;
 	my $name = shift;
+	my $args = shift || {};
+
+	my $key = join '.',
+		($self->_mq_subject || ()),
+		$name;
 
 	my $class = join '::',
 		($self->_mq_namespace || ()),
@@ -28,7 +33,7 @@ sub emit
 
 	Class::MOP::load_class($class);
 
-	my $obj = $class->new;
+	my $obj = $class->new(%$args, key => $key, source => $self);
 
 	$obj->publish;
 }
