@@ -8,7 +8,6 @@ Net::MQ::Transport - transport protocol
 
 use Moose::Role;
 
-requires 'connect';
 requires 'publish';
 requires 'dequeue';
 requires 'poll';
